@@ -1,0 +1,57 @@
+const defaultTheme = require('tailwindcss/defaultTheme')
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: 'class',
+
+  content: [
+    './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
+    './storage/framework/views/*.php',
+    './resources/views/**/*.blade.php',
+    './resources/js/**/*.vue',
+  ],
+
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['v-sans', 'Figtree', ...defaultTheme.fontFamily.sans],
+      },
+
+      fontSize: {
+        xxs: ['0.65rem', { lineHeight: '1.1rem' }],
+      },
+
+      colors: {
+        primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+
+        brand: {
+          task: {
+            DEFAULT: '#c8ebf8',
+            dark: '#a1d9e9',
+          },
+
+          completed: {
+            DEFAULT: '#c9f9cd',
+            dark: '#b3f1c1',
+          },
+
+          cancelled: {
+            DEFAULT: '#f9dfc8',
+            dark: '#f3c3a4',
+          },
+
+          progress: {
+            DEFAULT: '#f9edc8',
+            dark: '#f3e1a4',
+          },
+        },
+      },
+    },
+  },
+
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('tailwind-scrollbar'),
+  ],
+}
