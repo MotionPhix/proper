@@ -13,7 +13,7 @@ class Phone extends Model
 
   protected $table = 'phone_numbers';
 
-  public function phoneable(): MorphTo
+  public function model(): MorphTo
   {
     return $this->morphTo();
   }

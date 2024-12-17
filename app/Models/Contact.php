@@ -18,162 +18,76 @@ class Contact extends Model
 {
   use HasFactory, BootUuid;
 
+  /**
+   * The attributes that are mass assignable.
+   *
+   * @var array<int, string>
+   */
+  protected $fillable = [
+    'first_name',
+    'last_name',
+    'email',
+    'status',
+    'position',
+    'company_id',
+    'user_id',
+  ];
+
+  /**
+   * The attributes that should be hidden for serialization.
+   *
+   * @var array<int, string>
+   */
+  protected $hidden = [
+    'created_at',
+    'updated_at',
+  ];
+
+  // A contact belongs to a company
   public function company(): BelongsTo
   {
     return $this->belongsTo(Company::class);
   }
 
-  public function interactions(): HasMany
-  {
-    return $this->hasMany(Interaction::class);
-  }
-
-  public function lastInteraction(): HasOne
-  {
-    return $this->hasOne(Interaction::class, 'id', 'last_interaction_id');
-  }
-
-  public function scopeWithLastInteraction(Builder $query)
-  {
-    $query->addSubSelect(
-      'last_interaction_id',
-      Interaction::select('id')
-        ->whereRaw('contact_id = contacts.id')
-        ->latest()
-    )->with('lastInteraction');
-  }
-
-  public function user(): BelongsTo
-  {
-    return $this->belongsTo(User::class);
-  }
-
-  public function users(): BelongsToMany
-  {
-    return $this->belongsToMany(User::class, 'contact_user')
-      ->withPivot(['from_date', 'to_date'])
-      ->withTimestamps();
-  }
-
-  public function companies(): BelongsToMany
-  {
-    return $this->belongsToMany(Company::class, 'company_contact')
-      ->withPivot(['from_date', 'to_date'])
-      ->withTimestamps();
-  }
-
+  // A contact may own multiple projects
   public function projects(): HasMany
   {
     return $this->hasMany(Project::class);
   }
 
-  public function phoneNumbers(): MorphMany
+  // A contact may be linked to multiple users
+  public function users(): HasMany
   {
-    return $this->morphMany(Phone::class, 'phoneable');
-  }
-
-  public function total()
-  {
-    return $this->forUser(auth()->user())->count();
-  }
-
-  public function scopeOrderByName(Builder $query)
-  {
-    $query->orderBy('first_name')->orderBy('last_name');
-  }
-
-  public function scopeForUser(Builder $query, User $user)
-  {
-    if ($user->hasAnyRole(['admin', 'general-manager'])) {
-      return $query->with('company');
-    }
-
-    $query->whereHas('users', function ($query) use ($user) {
-      $query->where('user_id', $user->id);
-    })->with(['company' => function ($query) {
-      $query->select('companies.id', 'companies.name');
-    }])->select(['id', 'first_name', 'last_name', 'status', 'email', 'company_id']);
+    return $this->hasMany(User::class);
   }
 
   /**
-   * Get the total revenue for the contact with the currently logged in user.
+   * Get the full name of the contact.
    *
-   * @return float
+   * @return string
    */
-  public function getRevenueAttribute()
+  public function getFullNameAttribute(): string
   {
-    $user = auth()->user(); // logged in user
+    return "{$this->first_name} {$this->last_name}";
+  }
 
-    $revenue = 0;
+  public function phones()
+  {
+    return $this->morphMany(Phone::class, 'model');
+  }
 
-    /*if ($user->id === $this->user_id) {
+  /**
+   * Custom Methods
+   */
 
-      foreach ($this->projects as $project) {
-
-        if ($user->id === $project->user_id) {
-
-          $revenue += $project->tasks->sum('cost');
-
-        }
-
-      }
-
-      return 'Mk ' . number_format($revenue / 100, 2);
-    }
-
-    foreach ($this->projects as $project) {
-      if ($this->users->first(function ($u) use($user) { return $u->id === $user->id; })->id === $project->user_id) {
-        $revenue += $project->tasks->sum('cost');
-      }
-    }*/
-
-    /*if ($user->id === $this->user_id) {
-      foreach ($this->projects as $project) {
-        if ($user->id === $project->owner->id) {
-          $revenue += $project->tasks->sum('cost');
-        }
-      }
-    } else {
-      foreach ($this->projects as $project) {
-        $owner = $this->users->first(function ($u) use ($project) {
-          return $u->id === $project->owner->id;
-        });
-
-        if ($owner && $owner->id === $user->id) {
-          $revenue += $project->tasks->sum('cost');
-        }
-      }
-    }*/
-
-    // Check if the logged-in user has the necessary roles
-    if ($user->hasAnyRole(['admin', 'general-manager'])) {
-
-      // Loop through all projects of the currently viewed contact
-      foreach ($this->projects as $project) {
-
-        $revenue += $project->tasks->sum('cost');
-      }
-    } else {
-
-      if ($this->projects->count()) {
-
-        // Loop through all projects of the currently viewed contact
-        foreach ($this->projects as $project) {
-
-          // Check if the logged-in user and the currently viewed contact ever worked on a project together
-          $userIds = $project->users->pluck('id')->toArray();
-
-          if ($project->isOwner($user) && in_array($this->user_id, $userIds)) {
-
-            $revenue += $project->tasks->sum('cost');
-          }
-        }
-      } else {
-
-        return "No project's found for $this->first_name yet.";
-      }
-    }
-
-    return 'Mk ' . number_format($revenue / 100, 2);
+  /**
+   * Check if the contact belongs to a given company
+   *
+   * @param int $companyId
+   * @return bool
+   */
+  public function belongsToCompany(int $companyId): bool
+  {
+    return $this->company_id === $companyId;
   }
 }

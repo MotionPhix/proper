@@ -45,7 +45,7 @@ class UserFactory extends Factory
       $numPhoneNumbers = fake('en_ZA')->numberBetween(0, 2);
 
       for ($i = 0; $i < $numPhoneNumbers; $i++) {
-        $user->phoneNumbers()->create([
+        $user->phones()->create([
           'number' => fake('en_ZA')->phoneNumber(),
           'type' => fake('en_ZA')->randomElement(['work', 'home', 'mobile'])
         ]);

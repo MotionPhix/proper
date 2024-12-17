@@ -14,23 +14,83 @@ class Company extends Model
 {
   use HasFactory, BootUuid;
 
-  public function contacts()
+  /**
+   * The attributes that are mass assignable.
+   *
+   * @var array<int, string>
+   */
+  protected $fillable = [
+    'name',
+    'email',
+    'phone',
+    'website',
+    'address',
+    'logo',
+  ];
+
+  // A company can have many contacts
+  public function contacts(): HasMany
   {
     return $this->hasMany(Contact::class);
   }
 
-  public function projects()
+  // A company can have many projects
+  public function projects(): HasMany
   {
     return $this->hasMany(Project::class);
   }
 
-  public function phoneNumbers()
+  // A company can have many users
+  public function users(): BelongsToMany
   {
-    return $this->morphMany(PhoneNumber::class, 'phoneable');
+    return $this->belongsToMany(User::class, 'company_user')
+      ->withPivot('role')
+      ->withTimestamps();
   }
 
-  public function scopeOrderByName(Builder $query)
+  /**
+   * Get the full logo URL for the company.
+   *
+   * @return string
+   */
+  public function getLogoUrlAttribute(): string
   {
-    return $query->orderBy('name');
+    return $this->logo ? asset('storage/' . $this->logo) : asset('images/default-logo.png');
+  }
+
+  /**
+   * Check if a user is associated with the company.
+   *
+   * @param int $userId
+   * @return bool
+   */
+  public function hasUser(int $userId): bool
+  {
+    return $this->users()->where('user_id', $userId)->exists();
+  }
+
+  /**
+   * Add a user to the company with a specific role.
+   *
+   * @param int $userId
+   * @param string $role
+   * @return void
+   */
+  public function addUser(int $userId, string $role = 'member'): void
+  {
+    $this->users()->syncWithoutDetaching([
+      $userId => ['role' => $role]
+    ]);
+  }
+
+  /**
+   * Remove a user from the company.
+   *
+   * @param int $userId
+   * @return void
+   */
+  public function removeUser(int $userId): void
+  {
+    $this->users()->detach($userId);
   }
 }

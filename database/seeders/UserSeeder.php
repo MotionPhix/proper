@@ -33,12 +33,5 @@ class UserSeeder extends Seeder
     \App\Models\User::factory(2)->create();
 
     $users = \App\Models\User::all();
-
-    $roles = \App\Models\Role::pluck('id')->toArray();
-
-    foreach ($users as $user) {
-      // $user->syncRoles([$roles->random(rand(3, 5))]);
-      $user->roles()->attach(Arr::random($roles, rand(3, 5)));
-    }
   }
 }

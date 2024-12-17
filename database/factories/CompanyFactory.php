@@ -18,6 +18,7 @@ class CompanyFactory extends Factory
   {
     return [
       'name' => fake('en_ZA')->company,
+      'email' => fake('en_ZA')->unique()->companyEmail(),
       'address' => fake('en_ZA')->streetAddress
     ];
   }

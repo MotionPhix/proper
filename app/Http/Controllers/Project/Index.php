@@ -14,9 +14,14 @@ class Index extends Controller
    */
   public function __invoke(Request $request)
   {
-    $projects = Project::forUser(auth()->user())->paginate(15);
+    // Get the currently authenticated user
+    $user = $request->user();
 
-    return Inertia::render('Projects/Index', [
+    // Use the `forUser` scope on the Project model
+    $projects = Project::forUser($user)->with('company', 'contact')->paginate(10); // Paginate to avoid loading too many projects at once
+
+    // Return response (Inertia.js response for SPA or JSON response for API)
+    return inertia('Projects/Index', [
       'projects' => $projects
     ]);
   }

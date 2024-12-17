@@ -19,6 +19,7 @@ return new class extends Migration
 
       $table->string('first_name', 30);
       $table->string('last_name', 30);
+      $table->string('position', 50)->nullable();
       $table->string('email', 50)->nullable();
       $table->enum('status', ['active', 'in-active'])->default('active');
 

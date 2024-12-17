@@ -21,7 +21,6 @@ class TaskSeeder extends Seeder
 
       $project = $projects->random();
 
-      $task->user_id = $project->users->random()->id;
       $task->project_id = $project->id;
       $task->board_id = $project->boards->random()->id;
 

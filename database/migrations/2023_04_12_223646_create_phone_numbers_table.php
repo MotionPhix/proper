@@ -18,7 +18,7 @@ return new class extends Migration
       $table->uuid('uuid');
       $table->string('number');
       $table->enum('type', ['mobile', 'work', 'home', 'fax'])->default('mobile');
-      $table->morphs('phoneable');
+      $table->morphs('model');
       $table->timestamps();
     });
   }

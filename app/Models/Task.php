@@ -7,10 +7,21 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Task extends Model
 {
   use HasFactory, BootUuid;
+
+  protected $fillable = [
+    'title',
+    'description',
+    'status',
+    'due_date',
+    'board_id',
+    'project_id',
+    'assigned_to',
+  ];
 
   const STATUSES = [
     'new' => 'New',
@@ -23,56 +34,22 @@ class Task extends Model
 
   const POSITION_MIN =  0.00002;
 
-  public function project()
-  {
-    return $this->belongsTo(Project::class);
-  }
-
-  public function board()
+  /**
+   * Relationships
+   */
+  public function board(): BelongsTo
   {
     return $this->belongsTo(Board::class);
   }
 
-  public function user()
+  public function project(): BelongsTo
   {
-    return $this->belongsTo(User::class);
+    return $this->belongsTo(Project::class);
   }
 
-  public function humanCost(): Attribute
+  public function assignedUser(): BelongsTo
   {
-    return Attribute::make(
-      get: function () {
-        return 'MK ' . number_format($this->cost / 100, 2);
-      },
-    );
-  }
-
-  public function getStatusColorAttribute()
-  {
-    return [
-      'done' => 'green',
-      'cancelled' => 'red',
-      'in_progress' => 'blue'
-    ][$this->status] ?? 'gray';
-  }
-
-  public function getStatusDisplayAttribute()
-  {
-    return [
-      'done' => 'Completed',
-      'cancelled' => 'Cancelled',
-      'in_progress' => 'In Progress'
-    ][$this->status] ?? 'New';
-  }
-
-  public function setStartDateAttribute($value)
-  {
-    $this->attributes['start_date'] = Carbon::parse($value)->format('Y-m-d H:i');
-  }
-
-  public function setEndDateAttribute($value)
-  {
-    $this->attributes['end_date'] = Carbon::parse($value)->format('Y-m-d H:i');
+    return $this->belongsTo(User::class, 'assigned_to');
   }
 
   public static function booted()

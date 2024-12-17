@@ -19,16 +19,15 @@ return new class extends Migration
 
       $table->string('title', 100);
       $table->longText('description')->nullable();
-      $table->enum('status', ['new', 'in_progress', 'done', 'cancelled']);
-      $table->double('position')->nullable();
-      $table->timestamp('start_date');
-      $table->timestamp('end_date');
+      $table->enum('status', ['todo', 'in-progress', 'done'])->default('todo');
+      $table->date('due_date')->nullable();
+      $table->unsignedDecimal('cost', 10, 2)->default(0);
 
-      $table->bigInteger('cost');
+      $table->double('position')->nullable();
 
       $table->foreignId('board_id')->index()->constrained('boards')->onDelete('cascade');
       $table->foreignId('project_id')->index()->constrained('projects')->onDelete('cascade');
-      $table->foreignId('user_id')->index()->constrained('users')->onDelete('cascade');
+      $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
 
       $table->timestamps();
     });

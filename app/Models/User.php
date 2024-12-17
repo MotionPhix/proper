@@ -48,109 +48,85 @@ class User extends Authenticatable
     'email_verified_at' => 'datetime',
   ];
 
-  public function projects(): HasMany
+  /**
+   * Full Name Accessor
+   *
+   * @return string
+   */
+  public function getFullNameAttribute(): string
   {
-    return $this->hasMany(Project::class);
+    return "{$this->first_name} {$this->last_name}";
   }
 
-  public function ownedProjects()
+  /**
+   * Relationships
+   */
+
+  // A user may be the owner of multiple projects
+  public function ownedProjects(): HasMany
   {
-    return $this->hasManyThrough(
-      Project::class,
-      ProjectUser::class,
-      'user_id',
-      'id',
-      'id',
-      'project_id'
-    )->where('role', 'owner');
+    return $this->hasMany(Project::class, 'owner_id');
   }
 
+  // A user can be assigned to multiple projects
   public function assignedProjects(): BelongsToMany
   {
     return $this->belongsToMany(Project::class, 'project_user')
-      ->where('role', '!=', 'owner')
-      ->withPivot('assigned_by')
-      ->using(ProjectUser::class)
-      ->as('assignment')
+      ->withPivot('role', 'assigned_by')
       ->withTimestamps();
   }
 
-  public function tasks()
+  // A user may have created multiple tasks
+  public function tasks(): HasMany
   {
     return $this->hasMany(Task::class);
   }
 
-  public function roles()
+  // A user can be associated with multiple contacts
+  public function contacts(): HasMany
   {
-    return $this->belongsToMany(Role::class, 'role_user')->withTimestamps();
+    return $this->hasMany(Contact::class);
   }
 
-  public function permissions()
+  /**
+   * Custom Methods
+   */
+
+  /**
+   * Check if the user is an admin
+   *
+   * @return bool
+   */
+  public function isAdmin(): bool
   {
-    return $this->hasManyThrough(
-      Permission::class,
-      Role::class,
-      'id',
-      'id',
-      'role_id',
-      'permission_id'
-    );
+    return $this->hasRole('admin');
   }
 
-  public function contacts()
+  /**
+   * Check if the user is the owner of a project
+   *
+   * @param Project $project
+   * @return bool
+   */
+  public function isOwnerOfProject(Project $project): bool
   {
-    return $this->belongsToMany(Contact::class, 'contact_user')->withPivot(['from_date', 'to_date'])->withTimestamps();
+    return $this->id === $project->owner_id;
   }
 
-  public function phoneNumbers()
+  /**
+   * Check if the user is assigned to a project
+   *
+   * @param Project $project
+   * @return bool
+   */
+  public function isAssignedToProject(Project $project): bool
   {
-    return $this->morphMany(Phone::class, 'phoneable');
+    return $this->assignedProjects->contains($project);
   }
 
-  public function syncRoles($roles)
+  public function phones()
   {
-    $this->roles()->sync($roles);
-  }
-
-  public function hasRole($role)
-  {
-    return $this->roles()->where('slug', $role)->exists();
-  }
-
-  public function hasAnyRole($roles)
-  {
-    return $this->roles()->whereIn('slug', $roles)->exists();
-  }
-
-  public function hasPermissionTo($permissionSlug)
-  {
-    return $this->roles->reduce(function ($carry, $role) use ($permissionSlug) {
-      return $carry || $role->permissions->contains('slug', $permissionSlug);
-    }, false);
-  }
-
-  public function givePermissionTo($permission)
-  {
-    $permissions = is_string($permission) ? Permission::whereName($permission)->get() : $permission;
-    $this->permissions()->saveMany($permissions);
-  }
-
-  public function salesTotalCommission()
-  {
-    $commission = 0;
-
-    // check if the user has sales role
-    if ($this->hasRole('sales')) {
-      // get all projects owned by the user
-      $projects = $this->ownedProjects;
-
-      // calculate commission for each project
-      foreach ($projects as $project) {
-        $commission += $project->budget * 0.1; // 10% commission
-      }
-    }
-
-    return $commission;
+    return $this->morphMany(Phone::class, 'model');
   }
 
   public function avatarUrl()

@@ -15,7 +15,7 @@ class Index extends Controller
   {
     $projects = Project::forUser($request->user())->get();
 
-    return view('projects.index', [
+    return Inertia('Projects/Index', [
       'projects' => $projects, 'projectsCount' => $projects->count()
     ]);
   }

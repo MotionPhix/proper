@@ -1,0 +1,132 @@
+<script setup lang="ts">
+import { Head, Link } from '@inertiajs/vue3'
+import type { Company, Contact, ProjectApiResponse } from '@/types'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import PageHeader from '@/Components/PageHeader.vue'
+import { IconPlus, IconTrash, IconEdit } from '@tabler/icons-vue'
+import { Button } from '@/Components/ui/button'
+
+defineProps<{
+  projects: ProjectApiResponse
+  companies?: Array<Company>
+  contacts?: Array<Contact>
+}>()
+
+defineOptions({
+  layout: AuthenticatedLayout,
+})
+</script>
+
+<template>
+  <Head title="Projects" />
+
+  <!-- Header Section -->
+  <PageHeader>
+    <h2 class="flex items-center gap-2 text-xl font-semibold leading-tight text-gray-900 dark:text-white">
+      Projects
+      <span class="text-gray-400 dark:text-gray-600">
+        ({{ projects.total }})
+      </span>
+    </h2>
+
+    <Link
+      as="button"
+      :href="route('projects.create')"
+      class="inline-flex items-center gap-2 px-4 py-2 text-white transition duration-300 bg-blue-600 rounded-md hover:bg-blue-700"
+    >
+      <IconPlus class="w-5 h-5" />
+      <span>Create New Project</span>
+    </Link>
+  </PageHeader>
+
+  <!-- Projects Section -->
+  <section class="px-4 py-8">
+    <div v-if="projects.total" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div
+        v-for="project in projects.data"
+        :key="project.id"
+        class="relative p-6 bg-white rounded-lg shadow-md dark:bg-slate-800 hover:shadow-lg"
+      >
+        <!-- Project Name -->
+        <h3 class="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+          <Link :href="route('projects.show', project.id)">
+            {{ project.name }}
+          </Link>
+        </h3>
+
+        <!-- Description -->
+        <p class="mb-4 text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+          {{ project.description || 'No description available for this project.' }}
+        </p>
+
+        <!-- Associated Company -->
+        <p class="mb-2 text-xs text-gray-600 dark:text-gray-400">
+          <span class="font-semibold">Company:</span>
+          {{ project.company?.name || 'No company assigned' }}
+        </p>
+
+        <!-- Associated Contact -->
+        <p class="mb-2 text-xs text-gray-600 dark:text-gray-400">
+          <span class="font-semibold">Contact:</span>
+          {{ project.contact?.first_name }} {{ project.contact?.last_name }}
+        </p>
+
+        <!-- Start and End Dates -->
+        <div class="mb-4 text-xs text-gray-600 dark:text-gray-400">
+          <span class="font-semibold">Start Date:</span> {{ project.start_date }} <br />
+          <span class="font-semibold">End Date:</span> {{ project.end_date }}
+        </div>
+
+        <!-- Status Badge -->
+        <div
+          class="inline-block px-3 py-1 text-xs font-semibold text-white rounded-full"
+          :class="{
+            'bg-green-500': project.status === 'open',
+            'bg-red-500': project.status === 'closed',
+            'bg-yellow-500': project.status === 'in-progress'
+          }"
+        >
+          {{ project.status.replace('-', ' ').toUpperCase() }}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="absolute top-4 right-4 flex space-x-2">
+          <!-- Edit Project -->
+          <Link
+            :href="route('projects.edit', project.id)"
+            class="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600"
+          >
+            <IconEdit class="w-4 h-4" />
+          </Link>
+
+          <!-- Delete Project -->
+          <Link
+            as="button"
+            method="delete"
+            :href="route('projects.destroy', project.id)"
+            class="p-2 text-white bg-red-500 rounded-full hover:bg-red-600"
+          >
+            <IconTrash class="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="flex flex-col items-center justify-center">
+      <h2 class="text-lg font-semibold text-gray-600 dark:text-gray-300">
+        No projects found.
+      </h2>
+      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Create a project to get started.
+      </p>
+
+      <Link
+        as="button"
+        :href="route('projects.create')"
+        class="mt-4 px-6 py-3 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+      >
+        Create Project
+      </Link>
+    </div>
+  </section>
+</template>

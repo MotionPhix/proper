@@ -15,12 +15,13 @@ return new class extends Migration
       $table->id();
       $table->uuid('uuid');
 
-      $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-      $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
       $table->string('name');
-      $table->timestamps();
+      $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
+      $table->foreignId('project_id')->index()->constrained('projects')->onDelete('cascade');
 
       $table->unique(['name', 'project_id']);
+
+      $table->timestamps();
     });
   }
 

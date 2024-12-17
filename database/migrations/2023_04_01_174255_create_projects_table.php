@@ -19,9 +19,13 @@ return new class extends Migration
 
       $table->string('name', 50);
       $table->text('description')->nullable();
-      $table->enum('status', ['open', 'closed', 'cancelled'])->default('open');
 
-      $table->foreignId('company_id')->index()->constrained('companies')->onDelete('cascade');
+      $table->date('start_date')->nullable();
+      $table->date('end_date')->nullable();
+
+      $table->enum('status', ['pending', 'in-progress', 'completed', 'on-hold', 'canceled'])->default('pending');
+
+      $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('cascade');
       $table->foreignId('contact_id')->index()->constrained('contacts')->onDelete('cascade');
 
       $table->timestamps();

@@ -13,9 +13,14 @@ class Board extends Model
 {
   use HasFactory, BootUuid;
 
-  public function user(): BelongsTo
+  protected $fillable = [
+    'name',
+    'project_id',
+  ];
+
+  public function project(): BelongsTo
   {
-    return $this->belongsTo(User::class);
+    return $this->belongsTo(Project::class);
   }
 
   public function tasks(): HasMany

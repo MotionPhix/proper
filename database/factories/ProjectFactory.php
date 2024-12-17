@@ -21,7 +21,7 @@ class ProjectFactory extends Factory
     return [
       'name' => fake()->unique()->sentence(2),
       'description' => fake()->paragraph,
-      'status' => fake()->randomElement(['open', 'closed']),
+      'status' => fake()->randomElement(['pending', 'in-progress', 'completed', 'on-hold', 'canceled']),
       'contact_id' => $contact->id,
       'company_id' => $contact->company->id,
     ];
@@ -33,14 +33,8 @@ class ProjectFactory extends Factory
       // Assign project to a user
       $users = \App\Models\User::inRandomOrder()->limit(rand(1, 4))->get();
 
-      // add some interractions
-      $project->contact->interactions()->saveMany(\App\Models\Interaction::factory(rand(6, 15))->make([
-        "project_id" => $project->id,
-        "user_id" => $project->contact->user->id
-      ]));
-
       foreach ($users as $user) {
-        $project->users()->attach($user, ['role' => fake()->randomElement(['owner', 'member']), 'assigned_by' => \App\Models\User::inRandomOrder()->first()->id]);
+        $project->users()->attach($user, ['role' => fake()->randomElement(['owner', 'collaborator', 'viewer']), 'assigned_by' => \App\Models\User::inRandomOrder()->first()->id]);
       }
 
       // create a new board instance

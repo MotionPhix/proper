@@ -4,32 +4,26 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
   /**
    * Run the migrations.
-   *
-   * @return void
    */
-  public function up()
+  public function up(): void
   {
     Schema::create('project_user', function (Blueprint $table) {
       $table->id();
-      $table->uuid('uuid');
-      $table->unsignedBigInteger('user_id');
-      $table->unsignedBigInteger('project_id');
+      $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+      $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+      $table->enum('role', ['owner', 'collaborator', 'viewer'])->default('collaborator');
       $table->unsignedBigInteger('assigned_by')->nullable();
-      $table->string('role', 20)->nullable();
       $table->timestamps();
     });
   }
 
   /**
    * Reverse the migrations.
-   *
-   * @return void
    */
-  public function down()
+  public function down(): void
   {
     Schema::dropIfExists('project_user');
   }
